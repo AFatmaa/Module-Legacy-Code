@@ -1,3 +1,5 @@
+import { apiService } from "../index.mjs";
+
 /**
  * Create a bloom component
  * @param {string} template - The ID of the template to clone
@@ -20,10 +22,30 @@ const createBloom = (template, bloom) => {
   const bloomTime = bloomFrag.querySelector("[data-time]");
   const bloomTimeLink = bloomFrag.querySelector("a:has(> [data-time])");
   const bloomContent = bloomFrag.querySelector("[data-content]");
+  
+  const rebloomInfo = bloomFrag.querySelector("[data-rebloom-info]");
+  const rebloomSender = bloomFrag.querySelector("[data-rebloom-sender]");
+  const rebloomBtn = bloomFrag.querySelector("[data-action='rebloom']");
+  const rebloomCount = bloomFrag.querySelector("[data-rebloom-count]");
 
   bloomArticle.setAttribute("data-bloom-id", bloom.id);
-  bloomUsername.setAttribute("href", `/profile/${bloom.sender}`);
-  bloomUsername.textContent = bloom.sender;
+
+  if (bloom.rebloom_id) {
+    bloomUsername.setAttribute("href", `/profile/${bloom.original_sender}`);
+    bloomUsername.textContent = bloom.original_sender;
+
+    if (rebloomInfo) rebloomInfo.hidden = false;
+    if (rebloomSender) {
+      rebloomSender.textContent = bloom.sender;
+      rebloomSender.setAttribute("href", `/profile/${bloom.sender}`);
+    }
+  } else {
+    bloomUsername.setAttribute("href", `/profile/${bloom.sender}`);
+    bloomUsername.textContent = bloom.sender;
+
+    if (rebloomInfo) rebloomInfo.hidden = true;
+  }
+
   bloomTime.textContent = _formatTimestamp(bloom.sent_timestamp);
   bloomTimeLink.setAttribute("href", `/bloom/${bloom.id}`);
   bloomContent.replaceChildren(
@@ -31,8 +53,32 @@ const createBloom = (template, bloom) => {
       .body.childNodes
   );
 
+  if (rebloomCount) {
+    rebloomCount.textContent = bloom.rebloom_count || 0;
+  }
+
+  if (rebloomBtn) {
+    const idToRebloom = bloom.rebloom_id || bloom.id;
+    rebloomBtn.setAttribute("data-bloom-id", idToRebloom);
+    
+    rebloomBtn.addEventListener("click", handleRebloom);
+  }
+
   return bloomFrag;
 };
+
+async function handleRebloom(event) {
+  const button = event.target.closest("button");
+  const bloomId = button.getAttribute("data-bloom-id");
+  
+  if (!bloomId) return;
+
+  button.disabled = true;
+
+  await apiService.rebloom(bloomId);
+  
+  button.disabled = false;
+}
 
 function _formatHashtags(text) {
   if (!text) return text;
