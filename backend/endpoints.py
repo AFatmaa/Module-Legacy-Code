@@ -245,3 +245,24 @@ def verify_request_fields(names_to_types: Dict[str, type]) -> Union[Response, No
                 )
             )
     return None
+
+@jwt_required()
+def do_rebloom(bloom_id_str):
+    try:
+        bloom_id = int(bloom_id_str)
+    except ValueError:
+        return make_response(("Invalid bloom id", 400))
+
+    original_bloom = blooms.get_bloom(bloom_id)
+    if original_bloom is None:
+        return make_response(("Bloom not found", 404))
+
+    current_user = get_current_user()
+
+    blooms.add_bloom(
+        sender=current_user, 
+        content=original_bloom.content, 
+        rebloom_id=bloom_id
+    )
+
+    return jsonify({"success": True})
