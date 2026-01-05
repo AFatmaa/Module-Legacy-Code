@@ -4,6 +4,7 @@ from custom_json_provider import CustomJsonProvider
 from data.users import lookup_user
 from endpoints import (
     do_follow,
+    do_rebloom,
     get_bloom,
     hashtag,
     home_timeline,
@@ -58,6 +59,7 @@ def main():
 
     app.add_url_rule("/bloom", methods=["POST"], view_func=send_bloom)
     app.add_url_rule("/bloom/<id_str>", methods=["GET"], view_func=get_bloom)
+    app.add_url_rule("/bloom/<bloom_id_str>/rebloom", methods=["POST"], view_func=do_rebloom)
     app.add_url_rule("/blooms/<profile_username>", view_func=user_blooms)
     app.add_url_rule("/hashtag/<hashtag>", view_func=hashtag)
 
